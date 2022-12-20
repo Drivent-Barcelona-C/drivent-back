@@ -35,9 +35,35 @@ async function getHotelsWithRooms(userId: number, hotelId: number) {
   return hotel;
 }
 
+async function getResumeHotels(userId: number) {
+  await listHotels(userId);
+
+  const hotels = await hotelRepository.findResume();
+  let newHotel;
+  for(let i = 0; i < hotels.length; i++) {
+    let acumuladorRoom = 0;
+    const types: (boolean | string)[] = [false, false, false];
+    hotels[i].Rooms.map( room => {
+      if(room.capacity === 1 ) {
+        types[0] = "Single";
+      }
+      if(room.capacity === 2 ) {
+        types[1] = "Double";
+      }
+      if(room.capacity >= 3 ) {
+        types[2] = "Triple";
+      }
+      acumuladorRoom+= (room.capacity - room.Booking.length);});
+    newHotel = { ...hotels, vacanies: acumuladorRoom, types: types };
+  }
+  
+  return newHotel;
+}
+
 const hotelService = {
   getHotels,
   getHotelsWithRooms,
+  getResumeHotels,
 };
 
 export default hotelService;
