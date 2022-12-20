@@ -39,7 +39,7 @@ async function getResumeHotels(userId: number) {
   await listHotels(userId);
 
   const hotels = await hotelRepository.findResume();
-  let newHotel;
+  const newHotel = [];
   for(let i = 0; i < hotels.length; i++) {
     let acumuladorRoom = 0;
     const types: (boolean | string)[] = [false, false, false];
@@ -54,7 +54,7 @@ async function getResumeHotels(userId: number) {
         types[2] = "Triple";
       }
       acumuladorRoom+= (room.capacity - room.Booking.length);});
-    newHotel = { ...hotels, vacanies: acumuladorRoom, types: types };
+    newHotel.push({ ...hotels[0], vacanies: acumuladorRoom, types: types });
   }
   
   return newHotel;
