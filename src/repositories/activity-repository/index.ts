@@ -2,6 +2,9 @@ import { prisma } from "@/config";
 
 async function findActivities() {
   return prisma.activity.findMany({
+    orderBy: {
+      startHour: "asc"
+    },
     include: {
       ActivityBooking: true,
     }
