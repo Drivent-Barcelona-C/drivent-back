@@ -54,7 +54,7 @@ async function getResumeHotels(userId: number) {
         types[2] = "Triple";
       }
       acumuladorRoom+= (room.capacity - room.Booking.length);});
-    newHotel.push({ ...hotels[0], vacanies: acumuladorRoom, types: types });
+    newHotel.push({ ...hotels[i], vacanies: acumuladorRoom, types: types });
   }
   
   return newHotel;
