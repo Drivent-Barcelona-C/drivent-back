@@ -14,25 +14,21 @@ export async function filterActivities(req: AuthenticatedRequest, res: Response)
   }
 }
 
-export async function bookActivity(req: AuthenticatedRequest, res: Response) {
-  // try {
-  //   const { userId } = req;
-
-  //   const { roomId } = req.body;
-
-  //   if (!roomId) {
-  //     return res.sendStatus(httpStatus.BAD_REQUEST);
-  //   }
-
-  //   const booking = await bookingService.bookingRoomById(userId, Number(roomId));
-
-  //   return res.status(httpStatus.OK).send({
-  //     bookingId: booking.id,
-  //   });
-  // } catch (error) {
-  //   if (error.name === "CannotBookingError") {
-  //     return res.sendStatus(httpStatus.FORBIDDEN);
-  //   }
-  //   return res.sendStatus(httpStatus.NOT_FOUND);
-  // }
+export async function activitySubscribe(req: AuthenticatedRequest, res: Response) {
+  const { userId } = req;
+  const { activityId } = req.body;
+  try {
+    const activity = await activityService.postActivities(userId, activityId);
+    return res.status(httpStatus.OK).send(activity);
+  } catch (error) {
+    if (error.name === "cannotSubscribeActivity") {
+      return res.sendStatus(httpStatus.UNAUTHORIZED);
+    }
+    if (error.name === "UnauthorizedError") {
+      return res.sendStatus(httpStatus.UNAUTHORIZED);
+    }
+    if (error.name === "NotFoundError") {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+  }
 }
