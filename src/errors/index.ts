@@ -6,3 +6,4 @@ export * from "./not-found-error";
 export * from "./unauthorized-error";
 export * from "./request-error";
 export * from "./cannot-booking-error";
+export * from "./cannot-subscribe-in-two-activities-in-same-time-error";
