@@ -10,7 +10,11 @@ export async function filterActivities(req: AuthenticatedRequest, res: Response)
     const activities = await activityService.getActivities(userId);
     return res.status(httpStatus.OK).send(activities);
   } catch (error) {
-    return res.sendStatus(httpStatus.NOT_FOUND);
+    if (error.name === "UnauthorizedError") {
+      return res.sendStatus(httpStatus.UNAUTHORIZED);
+    } else {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
   }
 }
 
@@ -19,6 +23,7 @@ export async function activitySubscribe(req: AuthenticatedRequest, res: Response
   const { activityId } = req.body;
   try {
     const activity = await activityService.postActivities(userId, activityId);
+    console.log(activity);
     return res.status(httpStatus.OK).send(activity);
   } catch (error) {
     if (error.name === "cannotSubscribeActivity") {
