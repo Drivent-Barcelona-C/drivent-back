@@ -3,9 +3,11 @@ import { notFoundError, unauthorizedError, cannotSubscribeInTwoActivitiesInTheSa
 import activityRepository from "@/repositories/activity-repository";
 import { Activity } from "@prisma/client";
 
+export type ActivityInfo = Omit<Activity, "createdAt" | "updatedAt">
+
 async function validateAccess(userId: number) {
   const userHasPayment = await ticketService.getTicketByUserId(userId);
-  if (userHasPayment.status !== "PAID" || userHasPayment.TicketType.isRemote) {
+  if (userHasPayment.status === "RESERVED" || userHasPayment.TicketType.isRemote) {
     throw unauthorizedError();
   }
 
@@ -20,18 +22,30 @@ async function getActivities(userId: number) {
   }
 
   interface EventHashTable {
-    [date: string]: Activity[]
+    [date: string]: ActivityInfo[]
   }
 
   const hash: EventHashTable = {};
 
   activities.forEach(activity => {
     const temp = activity.startHour.toLocaleDateString();
+
+    const activityInfo = {
+      id: activity.id,
+      name: activity.name,
+      startHour: activity.startHour,
+      endHour: activity.endHour,
+      location: activity.location,
+      capacity: activity.capacity,
+      activityBookings: activity.ActivityBooking.length,
+      isUserEnrolled: activity.ActivityBooking.some(data => data.userId === userId)
+    };
+    
     if (!hash[temp]) {
       hash[temp] = [];
-      hash[temp].push(activity);
+      hash[temp].push(activityInfo);
     } else {
-      hash[temp].push(activity);
+      hash[temp].push(activityInfo);
     }
   });
 
@@ -39,6 +53,7 @@ async function getActivities(userId: number) {
 }
 
 async function postActivities(userId: number, activityId: number) {
+  const sameTimeActivitiesLimit = 1;
   const userHasPayment = await validateAccess(userId);
   const activityExists = await activityRepository.findActivity(activityId);
   if (!activityExists) {
@@ -55,7 +70,7 @@ async function postActivities(userId: number, activityId: number) {
       activity.Activity.startHour.getDay() === activityExists.startHour.getDay() &&
       activity.Activity.startHour.getHours() === activityExists.startHour.getHours(),
   );
-  if (dontHaveTime.length >= 1) {
+  if (dontHaveTime.length >= sameTimeActivitiesLimit) {
     throw cannotSubscribeInTwoActivitiesInTheSameTimeError();
   }
 

@@ -153,7 +153,7 @@ describe("POST /activities", () => {
   });
 
   describe("when token is valid", () => {
-    it("should respond with status 200 with a valid body for a online ticket", async () => {
+    it("should respond with status 401 for a online ticket", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
       const enrollment = await createEnrollmentWithAddress(user);
@@ -166,12 +166,8 @@ describe("POST /activities", () => {
       const response = await server.post("/activities").set("Authorization", `Bearer ${token}`).send({
         activityId: activity.id,
       });
-      expect(response.body).toEqual({
-        id: expect.any(Number),
-        userId: user.id,
-        activityId: activity.id,
-      });
-      expect(response.status).toEqual(httpStatus.OK);
+      
+      expect(response.status).toEqual(httpStatus.UNAUTHORIZED);
     });
     it("should respond with status 200 with a valid body for a paid presential ticket", async () => {
       const user = await createUser();
@@ -188,6 +184,11 @@ describe("POST /activities", () => {
       });
 
       expect(response.status).toEqual(httpStatus.OK);
+      expect(response.body).toEqual({
+        id: expect.any(Number),
+        userId: user.id,
+        activityId: activity.id,
+      });
     });
     it("should respond with status 401 with a valid body if ticket is not paid", async () => {
       const user = await createUser();
