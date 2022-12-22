@@ -23,7 +23,6 @@ export async function activitySubscribe(req: AuthenticatedRequest, res: Response
   const { activityId } = req.body;
   try {
     const activity = await activityService.postActivities(userId, activityId);
-    console.log(activity);
     return res.status(httpStatus.OK).send(activity);
   } catch (error) {
     if (error.name === "cannotSubscribeActivity") {

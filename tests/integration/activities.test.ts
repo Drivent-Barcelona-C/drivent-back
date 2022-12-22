@@ -1,6 +1,5 @@
 import app, { init } from "@/app";
 import faker from "@faker-js/faker";
-import { TicketStatus } from "@prisma/client";
 import httpStatus from "http-status";
 import * as jwt from "jsonwebtoken";
 import supertest from "supertest";
@@ -34,6 +33,100 @@ function createValidBody() {
   };
 }
 
+describe("GET /activities", () => {
+  it("should respond with status 401 if no token is given", async () => {
+    const validBody = createValidBody();
+    const response = await server.get("/activities").send(validBody);
+
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  it("should respond with status 401 if given token is not valid", async () => {
+    const token = faker.lorem.word();
+    const validBody = createValidBody();
+    const response = await server.get("/activities").set("Authorization", `Bearer ${token}`).send(validBody);
+
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  it("should respond with status 401 if there is no session for given token", async () => {
+    const userWithoutSession = await createUser();
+    const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
+    const validBody = createValidBody();
+    const response = await server.get("/activities").set("Authorization", `Bearer ${token}`).send(validBody);
+
+    expect(response.status).toBe(httpStatus.UNAUTHORIZED);
+  });
+
+  describe("when token is valid", () => {
+    it("should respond with status 401 if ticket is remote", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeRemote();
+      const ticket = await createTicket(enrollment.id, ticketType.id, "PAID");
+      await createPayment(ticket.id, ticketType.price);
+
+      const response = await server.get("/activities").set("Authorization", `Bearer ${token}`);
+      expect(response.status).toEqual(httpStatus.UNAUTHORIZED);
+    });
+
+    it("should respond with status 401 if ticket is not paid", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+      await createTicket(enrollment.id, ticketType.id, "RESERVED");
+      await createActivity();
+
+      const response = await server.get("/activities").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toEqual(httpStatus.UNAUTHORIZED);
+    });
+
+    it("should respond with status 200 with an empty body for a paid presential ticket but with event without activities", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+      const ticket = await createTicket(enrollment.id, ticketType.id, "PAID");
+      await createPayment(ticket.id, ticketType.price);
+
+      const response = await server.get("/activities").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toEqual(httpStatus.OK);
+      expect(response.body).toEqual({});
+    });
+
+    it("should respond with status 200 with a valid body for a paid presential ticket", async () => {
+      const user = await createUser();
+      const token = await generateValidToken(user);
+      const enrollment = await createEnrollmentWithAddress(user);
+      const ticketType = await createTicketTypeWithHotel();
+      const ticket = await createTicket(enrollment.id, ticketType.id, "PAID");
+      await createPayment(ticket.id, ticketType.price);
+      const activity = await createActivity();
+      await createActivity();
+
+      const response = await server.get("/activities").set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toEqual(httpStatus.OK);
+      //TODO
+      // expect(response.body).toMatchObject({
+      //   key: [{
+      //     id: expect.any(Number),
+      //     name: expect.any(String),
+      //     startHour: expect.any(String),
+      //     endHour: expect.any(String),
+      //     location: expect.any(String),
+      //     capacity: expect.any(Number),
+      //     activityBooking: expect.any(Number)
+      //   }]
+      // });
+    });
+  });
+});
+
 describe("POST /activities", () => {
   it("should respond with status 401 if no token is given", async () => {
     const validBody = createValidBody();
@@ -60,7 +153,7 @@ describe("POST /activities", () => {
   });
 
   describe("when token is valid", () => {
-    it("should respond with status 200 with a valid body for a online ticket", async () => {
+    it("should respond with status 401 for a online ticket", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
       const enrollment = await createEnrollmentWithAddress(user);
@@ -73,12 +166,8 @@ describe("POST /activities", () => {
       const response = await server.post("/activities").set("Authorization", `Bearer ${token}`).send({
         activityId: activity.id,
       });
-      expect(response.body).toEqual({
-        id: expect.any(Number),
-        userId: user.id,
-        activityId: activity.id,
-      });
-      expect(response.status).toEqual(httpStatus.OK);
+      
+      expect(response.status).toEqual(httpStatus.UNAUTHORIZED);
     });
     it("should respond with status 200 with a valid body for a paid presential ticket", async () => {
       const user = await createUser();
@@ -95,6 +184,11 @@ describe("POST /activities", () => {
       });
 
       expect(response.status).toEqual(httpStatus.OK);
+      expect(response.body).toEqual({
+        id: expect.any(Number),
+        userId: user.id,
+        activityId: activity.id,
+      });
     });
     it("should respond with status 401 with a valid body if ticket is not paid", async () => {
       const user = await createUser();
