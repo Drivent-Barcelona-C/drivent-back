@@ -30,6 +30,7 @@ async function checkValidBooking(roomId: number) {
 
 async function getBooking(userId: number) {
   const booking = await bookingRepository.findByUserId(userId);
+  //TODO - conferir se esse throw pode ser removido
   if (!booking) {
     throw notFoundError();
   }
