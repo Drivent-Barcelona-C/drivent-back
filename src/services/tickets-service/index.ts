@@ -18,10 +18,10 @@ async function getTicketByUserId(userId: number) {
     throw notFoundError();
   }
   const ticket = await ticketRepository.findTicketByEnrollmentId(enrollment.id);
+  //TODO - conferir se esse throw pode ser removido
   if (!ticket) {
     throw notFoundError();
   }
-
   return ticket;
 }
 
