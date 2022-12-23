@@ -3,7 +3,7 @@ import { notFoundError, unauthorizedError, cannotSubscribeInTwoActivitiesInTheSa
 import activityRepository from "@/repositories/activity-repository";
 import { Activity } from "@prisma/client";
 
-export type ActivityInfo = Omit<Activity, "createdAt" | "updatedAt">
+export type ActivityInfo = Omit<Activity, "createdAt" | "updatedAt">;
 
 async function validateAccess(userId: number) {
   const userHasPayment = await ticketService.getTicketByUserId(userId);
@@ -22,14 +22,13 @@ async function getActivities(userId: number) {
   }
 
   interface EventHashTable {
-    [date: string]: ActivityInfo[]
+    [date: string]: ActivityInfo[];
   }
 
   const hash: EventHashTable = {};
 
-  activities.forEach(activity => {
-    const temp = activity.startHour.toLocaleDateString();
-
+  activities.forEach((activity) => {
+    const temp = activity.startHour.toLocaleDateString("en-US");
     const activityInfo = {
       id: activity.id,
       name: activity.name,
@@ -38,9 +37,9 @@ async function getActivities(userId: number) {
       location: activity.location,
       capacity: activity.capacity,
       activityBookings: activity.ActivityBooking.length,
-      isUserEnrolled: activity.ActivityBooking.some(data => data.userId === userId)
+      isUserEnrolled: activity.ActivityBooking.some((data) => data.userId === userId),
     };
-    
+
     if (!hash[temp]) {
       hash[temp] = [];
       hash[temp].push(activityInfo);
