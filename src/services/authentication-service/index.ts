@@ -4,6 +4,7 @@ import { exclude } from "@/utils/prisma-utils";
 import { User } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { createUser } from "../users-service";
 import { invalidCredentialsError } from "./errors";
 
 async function signIn(params: SignInParams): Promise<SignInResult> {
@@ -17,6 +18,25 @@ async function signIn(params: SignInParams): Promise<SignInResult> {
 
   return {
     user: exclude(user, "password"),
+    token,
+  };
+}
+
+async function loginWithOauth(OauthToken: string, dataUser: UserParams) {
+  const newUser = await userRepository.findByEmail(dataUser.email);
+  if (newUser) {
+    const token = await createSession(newUser.id);
+
+    return {
+      user: exclude(newUser, "password"),
+      token,
+    };
+  }
+  const oauthUser = await createUser({ email: dataUser.email, password: dataUser.uid });
+  const token = await createSession(oauthUser.id);
+
+  return {
+    user: exclude(oauthUser, "password"),
     token,
   };
 }
@@ -44,7 +64,14 @@ async function validatePasswordOrFail(password: string, userPassword: string) {
 }
 
 export type SignInParams = Pick<User, "email" | "password">;
-
+export type UserParams = {
+  displayName: string;
+  email: string;
+  phoneNumber: string;
+  photoURL: string;
+  providerId: string;
+  uid: string;
+};
 type SignInResult = {
   user: Pick<User, "id" | "email">;
   token: string;
@@ -54,6 +81,7 @@ type GetUserOrFailResult = Pick<User, "id" | "email" | "password">;
 
 const authenticationService = {
   signIn,
+  loginWithOauth,
 };
 
 export default authenticationService;
