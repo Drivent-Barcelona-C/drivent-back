@@ -150,6 +150,8 @@ model Activity {
   ActivityBooking   ActivityBooking[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+
+  @@index([startHour(sort: Asc), name])
 }
 
 enum ActivityLocation {
