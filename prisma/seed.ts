@@ -17,6 +17,32 @@ async function main() {
   }
 
   console.log({ event });
+
+  let hotel = await prisma.hotel.findFirst();
+  if(!hotel){
+    async function createHotel(hotelName:string) {
+      const hotel = await prisma.hotel.create({
+        data: {
+          name: hotelName,
+          image: "https://media-cdn.tripadvisor.com/media/photo-s/19/84/9a/36/salinas-maceio-all-inclusive.jpg", 
+        },
+      });
+      const randomCapacity = () => Math.floor(Math.random() * 3 + 1);
+      for(let i = 0; i < 16; i++){
+        await prisma.room.create({
+          data: {
+            name: `${i+101}`,
+            hotelId: hotel.id,
+            capacity: randomCapacity(),
+          }
+        });  
+      }
+    }
+    createHotel("Barcelona Hotel");
+    createHotel("Candy Hotel");
+    createHotel("Driven Resort Hotel");
+    createHotel("Math Hotel");
+  }
 }
 
 main()
