@@ -105,7 +105,7 @@ describe("GET /activities", () => {
       const ticketType = await createTicketTypeWithHotel();
       const ticket = await createTicket(enrollment.id, ticketType.id, "PAID");
       await createPayment(ticket.id, ticketType.price);
-      const activity = await createActivity();
+      await createActivity();
       await createActivity();
 
       const response = await server.get("/activities").set("Authorization", `Bearer ${token}`);
@@ -195,7 +195,7 @@ describe("POST /activities", () => {
       const token = await generateValidToken(user);
       const enrollment = await createEnrollmentWithAddress(user);
       const ticketType = await createTicketTypeWithHotel();
-      const ticket = await createTicket(enrollment.id, ticketType.id, "RESERVED");
+      await createTicket(enrollment.id, ticketType.id, "RESERVED");
 
       const activity = await createActivity();
 
