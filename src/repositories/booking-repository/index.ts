@@ -16,13 +16,12 @@ async function create({ roomId, userId }: CreateParams): Promise<Booking> {
 }
 
 async function createWithTransaction({ roomId, userId }: CreateParams): Promise<Booking> {
-  let booking;
   const room = await roomRepository.findById(roomId);
   if (!room) {
     throw notFoundError();
   }
 
-  prisma.$transaction(
+  return prisma.$transaction(
     async (prisma) => {
       const bookings = await prisma.booking.findMany({
         where: {
@@ -32,18 +31,16 @@ async function createWithTransaction({ roomId, userId }: CreateParams): Promise<
           Room: true,
         }
       });
-      
       if (room.capacity <= bookings.length) {
         throw cannotBookingError();
       }
-      booking = prisma.booking.create({
+      return prisma.booking.create({
         data: {
           roomId,
           userId,
         }
       });
     });
-  return booking;
 }
 
 async function findByRoomId(roomId: number) {
@@ -83,12 +80,47 @@ async function upsertBooking({ id, roomId, userId }: UpdateParams) {
   });
 }
 
+async function upsertBookingWithTransaction({ id, roomId, userId }: UpdateParams) {
+  const room = await roomRepository.findById(roomId);
+  if (!room) {
+    throw notFoundError();
+  }
+
+  return prisma.$transaction(
+    async (prisma) => {
+      const bookings = await prisma.booking.findMany({
+        where: {
+          roomId,
+        },
+        include: {
+          Room: true,
+        }
+      });
+      if (room.capacity <= bookings.length) {
+        throw cannotBookingError();
+      }
+      return prisma.booking.upsert({
+        where: {
+          id,
+        },
+        create: {
+          roomId,
+          userId,
+        },
+        update: {
+          roomId,
+        }
+      });
+    });
+}
+
 const bookingRepository = {
   create,
   findByRoomId,
   findByUserId,
   upsertBooking,
   createWithTransaction,
+  upsertBookingWithTransaction,
 };
 
 export default bookingRepository;
