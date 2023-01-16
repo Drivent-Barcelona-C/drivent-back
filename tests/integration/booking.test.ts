@@ -88,6 +88,10 @@ describe("GET /booking", () => {
       expect(response.status).toEqual(httpStatus.OK);
       expect(response.body).toEqual({
         id: booking.id,
+        userId: booking.userId,
+        roomId: booking.roomId,
+        createdAt: booking.createdAt.toISOString(),
+        updatedAt: booking.updatedAt.toISOString(),
         Room: {
           id: expect.any(Number),
           name: expect.any(String),
