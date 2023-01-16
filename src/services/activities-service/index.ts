@@ -2,8 +2,11 @@ import ticketService from "@/services/tickets-service";
 import { notFoundError, unauthorizedError, cannotSubscribeInTwoActivitiesInTheSameTimeError } from "@/errors";
 import activityRepository from "@/repositories/activity-repository";
 import { Activity } from "@prisma/client";
+import { cacheConnection } from "@/config";
 
 export type ActivityInfo = Omit<Activity, "createdAt" | "updatedAt">;
+
+const redisClient = cacheConnection();
 
 async function validateAccess(userId: number) {
   const userHasPayment = await ticketService.getTicketByUserId(userId);
@@ -16,6 +19,12 @@ async function validateAccess(userId: number) {
 
 async function getActivities(userId: number) {
   await validateAccess(userId);
+
+  const cachedActivities = await (await redisClient).get("cachedActivitiesHash");
+  if (cachedActivities) {
+    return JSON.parse(cachedActivities);
+  }
+
   const activities = await activityRepository.findActivities();
   if (!activities) {
     throw notFoundError();
@@ -48,6 +57,7 @@ async function getActivities(userId: number) {
     }
   });
 
+  (await redisClient).set("cachedActivitiesHash", JSON.stringify(hash));
   return hash;
 }
 
@@ -74,6 +84,7 @@ async function postActivities(userId: number, activityId: number) {
   }
 
   const newSubscribe = await activityRepository.createActivityBooking(userId, activityId);
+  (await redisClient).del("cachedActivitiesHash");
   return newSubscribe;
 }
 

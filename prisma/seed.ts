@@ -33,6 +33,10 @@ async function main() {
         endsAt: dayjs().add(21, "days").toDate(),
       },
     });
+
+    if (event) {
+      console.log("Evento criado");
+    }
   }
   let ticketTypes = await prisma.ticketType.findMany();
   if (!ticketTypes) {
