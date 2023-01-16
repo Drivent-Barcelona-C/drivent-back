@@ -11,6 +11,9 @@ async function create({ roomId, userId }: CreateParams): Promise<Booking> {
     data: {
       roomId,
       userId,
+    },
+    include: {
+      Room: true
     }
   });
 }

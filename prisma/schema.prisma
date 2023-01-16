@@ -11,15 +11,15 @@ datasource db {
 }
 
 model User {
-  id         Int          @id @default(autoincrement())
-  email      String       @unique @db.VarChar(255)
-  password   String       @db.VarChar(255)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  Session    Session[]
-  Enrollment Enrollment[]
-  Booking    Booking[]
-  ActivityBooking   ActivityBooking[]
+  id              Int               @id @default(autoincrement())
+  email           String            @unique @db.VarChar(255)
+  password        String            @db.VarChar(255)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Session         Session[]
+  Enrollment      Enrollment[]
+  Booking         Booking[]
+  ActivityBooking ActivityBooking[]
 }
 
 model Session {
@@ -141,15 +141,15 @@ model Booking {
 }
 
 model Activity {
-  id                Int               @id @default(autoincrement())
-  name              String
-  startHour         DateTime
-  endHour           DateTime
-  location          ActivityLocation
-  capacity          Int
-  ActivityBooking   ActivityBooking[]
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id              Int               @id @default(autoincrement())
+  name            String
+  startHour       DateTime
+  endHour         DateTime
+  location        ActivityLocation
+  capacity        Int
+  ActivityBooking ActivityBooking[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 
   @@index([startHour(sort: Asc), name])
 }
@@ -161,11 +161,11 @@ enum ActivityLocation {
 }
 
 model ActivityBooking {
-  id          Int       @id @default(autoincrement())
-  User        User      @relation(fields: [userId], references: [id])
-  userId      Int
-  Activity    Activity  @relation(fields: [activityId], references: [id])
-  activityId  Int
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         Int      @id @default(autoincrement())
+  User       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  Activity   Activity @relation(fields: [activityId], references: [id])
+  activityId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }

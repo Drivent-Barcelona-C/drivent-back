@@ -14,6 +14,8 @@ async function main() {
         endsAt: dayjs().add(21, "days").toDate(),
       },
     });
+
+    if (event) { console.log('Evento criado'); }
   }
 
   console.log({ event });
